@@ -174,10 +174,10 @@ function bp_has_blogs( $args = '' ) {
 	// Check for and use search terms.
 	$search_terms_default = false;
 	$search_query_arg = bp_core_get_component_search_query_arg( 'blogs' );
-	if ( ! empty( $_REQUEST[ $search_query_arg ] ) ) {
-		$search_terms_default = stripslashes( $_REQUEST[ $search_query_arg ] );
-	} elseif ( ! empty( $_REQUEST['s'] ) ) {
-		$search_terms_default = stripslashes( $_REQUEST['s'] );
+	if ( ! empty( $_REQUEST[ $search_query_arg ] ) && is_string( $_REQUEST[ $search_query_arg ] ) ) {
+		$search_terms_default = wp_unslash( $_REQUEST[ $search_query_arg ] );
+	} elseif ( ! empty( $_REQUEST['s'] ) && is_string( $_REQUEST['s'] ) ) {
+		$search_terms_default = wp_unslash( $_REQUEST['s'] );
 	}
 
 	// Parse arguments.
@@ -1402,8 +1402,8 @@ function bp_directory_blogs_search_form() {
 
 	$query_arg = bp_core_get_component_search_query_arg( 'blogs' );
 
-	if ( ! empty( $_REQUEST[ $query_arg ] ) ) {
-		$search_value = stripslashes( $_REQUEST[ $query_arg ] );
+	if ( ! empty( $_REQUEST[ $query_arg ] ) && is_string( $_REQUEST[ $query_arg ] ) ) {
+		$search_value = wp_unslash( $_REQUEST[ $query_arg ] );
 	} else {
 		$search_value = bp_get_search_default_text( 'blogs' );
 	}
