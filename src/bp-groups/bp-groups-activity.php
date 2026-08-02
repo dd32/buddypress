@@ -293,9 +293,9 @@ function bp_groups_prefetch_activity_object_data( $activities ) {
 
 		if ( ! empty( $uncached_ids ) ) {
 			global $wpdb;
-			$bp = buddypress();
+			$bp               = buddypress();
 			$uncached_ids_sql = implode( ',', wp_parse_id_list( $uncached_ids ) );
-			$groups = $wpdb->get_results( "SELECT * FROM {$bp->groups->table_name} WHERE id IN ({$uncached_ids_sql})" );
+			$groups           = $wpdb->get_results( "SELECT * FROM {$bp->groups->table_name} WHERE id IN ({$uncached_ids_sql})" );
 			foreach ( $groups as $group ) {
 				wp_cache_set( $group->id, $group, 'bp_groups' );
 			}
@@ -490,8 +490,8 @@ add_filter( 'bp_activity_set_favorites_scope_args', 'bp_groups_filter_activity_f
  *
  * @param array|string $args {
  *     An array of arguments for the new activity item. Accepts all parameters
- *     of {@link bp_activity_add()}. However, this wrapper provides some
- *     additional defaults, as described below:
+ *     of {@link bp_activity_add()}. This wrapper provides the following
+ *     additional defaults.
  *     @type string $component     Default: the id of your Groups component
  *                                 (usually 'groups').
  *     @type bool   $hide_sitewide Default: True if the current group is not

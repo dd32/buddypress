@@ -91,7 +91,7 @@ class BP_Messages_Notices_List_Table extends WP_List_Table {
 	 *
 	 * @since 3.0.0
 	 *
-	 * @param object $item The current item
+	 * @param object $item The current item.
 	 */
 	public function single_row( $item ) {
 
@@ -110,7 +110,7 @@ class BP_Messages_Notices_List_Table extends WP_List_Table {
 	 *
 	 * @since 3.0.0
 	 *
-	 * @param object $item The current item
+	 * @param object $item The current item.
 	 */
 	public function column_subject( $item ) {
 		$actions = array(
@@ -134,7 +134,7 @@ class BP_Messages_Notices_List_Table extends WP_List_Table {
 
 		if ( ! empty( $item->is_active ) ) {
 			/* translators: %s: notice subject */
-			$item->subject = sprintf( _x( 'Active: %s', 'Tag prepended to active site-wide notice titles on WP Admin notices list table', 'buddypress' ), $item->subject );
+			$item->subject                  = sprintf( _x( 'Active: %s', 'Tag prepended to active site-wide notice titles on WP Admin notices list table', 'buddypress' ), $item->subject );
 			$actions['activate_deactivate'] = sprintf( '<a href="%s" data-bp-notice-id="%d" data-bp-action="deactivate">%s</a>',
 				esc_url( wp_nonce_url( add_query_arg( array(
 					'page'          => 'bp-notices',
@@ -157,7 +157,7 @@ class BP_Messages_Notices_List_Table extends WP_List_Table {
 	 *
 	 * @since 3.0.0
 	 *
-	 * @param object $item The current item
+	 * @param object $item The current item.
 	 */
 	public function column_message( $item ) {
 		// Escaping is made in `bp-messages/bp-messages-filters.php`.
@@ -170,7 +170,7 @@ class BP_Messages_Notices_List_Table extends WP_List_Table {
 	 *
 	 * @since 3.0.0
 	 *
-	 * @param object $item The current item
+	 * @param object $item The current item.
 	 */
 	public function column_date_sent( $item ) {
 		echo esc_html( apply_filters( 'bp_get_message_notice_post_date', bp_format_time( strtotime( $item->date_sent ) ) ) );

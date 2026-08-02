@@ -63,7 +63,7 @@ class BP_Groups_Invitation_Manager extends BP_Invitation_Manager {
 	 *
 	 * @since 5.0.0
 	 *
-	 * @param string $type Are we accepting an invitation or request?
+	 * @param string $type Whether an invitation or request is being accepted.
 	 * @param array  $r    Parameters that describe the invitation being accepted.
 	 * @return bool
 	 */
@@ -104,7 +104,7 @@ class BP_Groups_Invitation_Manager extends BP_Invitation_Manager {
 			do_action( 'groups_membership_accepted', $r['user_id'], $r['item_id'], true );
 		} else {
 			// Get an inviter_id from the invitation.
-			$invites = groups_get_invites( $r );
+			$invites    = groups_get_invites( $r );
 			$inviter_id = 0;
 			if ( $invites ) {
 				$inviter_id = current( $invites )->inviter_id;
