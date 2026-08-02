@@ -329,7 +329,16 @@ function groups_edit_base_group_details( $args = array() ) {
 
 	// Backward compatibility with old method of passing arguments.
 	if ( ! is_array( $args ) || count( $function_args ) > 1 ) {
-		_deprecated_argument( __METHOD__, '2.9.0', sprintf( esc_html__( 'Arguments passed to %1$s should be in an associative array. See the inline documentation at %2$s for more details.', 'buddypress' ), __METHOD__, __FILE__ ) );
+		_deprecated_argument(
+			__METHOD__,
+			'2.9.0',
+			sprintf(
+				/* translators: 1: the name of the method. 2: the name of the file. */
+				esc_html__( 'Arguments passed to %1$s should be in an associative array. See the inline documentation at %2$s for more details.', 'buddypress' ),
+				__METHOD__,
+				__FILE__
+			)
+		);
 
 		$old_args_keys = array(
 			0 => 'group_id',
@@ -1059,22 +1068,22 @@ function groups_get_user_groups( $user_id = 0, $pag_num = 0, $pag_page = 0 ) {
  *
  * @since 2.6.0
  *
- * @param int       $user_id ID of the user.
- * @param array     $args {
+ * @param int   $user_id ID of the user.
+ * @param array $args {
  *     Array of optional args.
- *     @param bool|null $is_confirmed Whether to return only confirmed memberships. Pass `null` to disable this
+ *     @type bool|null $is_confirmed Whether to return only confirmed memberships. Pass `null` to disable this
  *                                    filter. Default: true.
- *     @param bool|null $is_banned    Whether to return only banned memberships. Pass `null` to disable this filter.
+ *     @type bool|null $is_banned    Whether to return only banned memberships. Pass `null` to disable this filter.
  *                                    Default: false.
- *     @param bool|null $is_admin     Whether to return only admin memberships. Pass `null` to disable this filter.
+ *     @type bool|null $is_admin     Whether to return only admin memberships. Pass `null` to disable this filter.
  *                                    Default: false.
- *     @param bool|null $is_mod       Whether to return only mod memberships. Pass `null` to disable this filter.
+ *     @type bool|null $is_mod       Whether to return only mod memberships. Pass `null` to disable this filter.
  *                                    Default: false.
- *     @param bool|null $invite_sent  Whether to return only memberships with 'invite_sent'. Pass `null` to disable
+ *     @type bool|null $invite_sent  Whether to return only memberships with 'invite_sent'. Pass `null` to disable
  *                                    this filter. Default: false.
- *     @param string    $orderby      Field to order by. Accepts 'id' (membership ID), 'group_id', 'date_modified'.
+ *     @type string    $orderby      Field to order by. Accepts 'id' (membership ID), 'group_id', 'date_modified'.
  *                                    Default: 'group_id'.
- *     @param string    $order        Sort order. Accepts 'ASC' or 'DESC'. Default: 'ASC'.
+ *     @type string    $order        Sort order. Accepts 'ASC' or 'DESC'. Default: 'ASC'.
  * }.
  * @return array Array of matching group memberships, keyed by group ID.
  */
@@ -1869,7 +1878,16 @@ function groups_delete_invite( $user_id, $group_id, $inviter_id = false ) {
 function groups_send_invites( ...$args ) {
 	// Backward compatibility with old method of passing arguments.
 	if ( ! is_array( $args[0] ) || count( $args ) > 1 ) {
-		_deprecated_argument( __METHOD__, '5.0.0', sprintf( esc_html__( 'Arguments passed to %1$s should be in an associative array. See the inline documentation at %2$s for more details.', 'buddypress' ), __METHOD__, __FILE__ ) );
+		_deprecated_argument(
+			__METHOD__,
+			'5.0.0',
+			sprintf(
+				/* translators: 1: the name of the method. 2: the name of the file. */
+				esc_html__( 'Arguments passed to %1$s should be in an associative array. See the inline documentation at %2$s for more details.', 'buddypress' ),
+				__METHOD__,
+				__FILE__
+			)
+		);
 
 		$old_args_keys = array(
 			0 => 'inviter_id',
@@ -2336,7 +2354,16 @@ function groups_remove_member( $user_id, $group_id, $group_admin_id = 0 ) {
 function groups_send_membership_request( ...$args ) {
 	// Backward compatibility with old method of passing arguments.
 	if ( ! is_array( $args[0] ) || count( $args ) > 1 ) {
-		_deprecated_argument( __METHOD__, '5.0.0', sprintf( esc_html__( 'Arguments passed to %1$s should be in an associative array. See the inline documentation at %2$s for more details.', 'buddypress' ), __METHOD__, __FILE__ ) );
+		_deprecated_argument(
+			__METHOD__,
+			'5.0.0',
+			sprintf(
+				/* translators: 1: the name of the method. 2: the name of the file. */
+				esc_html__( 'Arguments passed to %1$s should be in an associative array. See the inline documentation at %2$s for more details.', 'buddypress' ),
+				__METHOD__,
+				__FILE__
+			)
+		);
 
 		$old_args_keys = array(
 			0 => 'user_id',

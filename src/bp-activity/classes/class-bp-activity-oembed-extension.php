@@ -10,7 +10,7 @@
 defined( 'ABSPATH' ) || exit;
 
 /**
- * oEmbed handler to respond and render single activity items.
+ * Handler for oEmbed responses and single activity item rendering.
  *
  * @since 2.6.0
  */
@@ -321,6 +321,7 @@ class BP_Activity_oEmbed_Extension extends BP_Core_oEmbed_Extension {
 				<?php
 				printf(
 					wp_kses(
+						/* translators: %s: number of comments */
 						_n(
 							/* translators: accessibility text */
 							'%s <span class="screen-reader-text">Comment</span>',
