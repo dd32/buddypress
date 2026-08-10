@@ -1066,7 +1066,7 @@ function bp_update_user_last_activity( $user_id = 0, $time = '' ) {
 	}
 
 	/** This filter is documented in bp_core_get_users() */
-	$use_legacy_query = apply_filters( 'bp_use_legacy_user_query', false, __FUNCTION__, [ 'user_id' => $user_id ] );
+	$use_legacy_query = apply_filters( 'bp_use_legacy_user_query', false, __FUNCTION__, array( 'user_id' => $user_id ) );
 
 	/*
 	 * As of BuddyPress 2.0, last_activity is no longer stored in usermeta.
@@ -2405,7 +2405,7 @@ function bp_core_signup_send_validation_email( $user_id, $user_email, $key, $sal
  * @param string                $password The inputted, attempted password.
  * @return WP_User|WP_Error
  */
-function bp_core_signup_disable_inactive( $user = null, $username = '', $password ='' ) {
+function bp_core_signup_disable_inactive( $user = null, $username = '', $password = '' ) {
 	// Login form not used.
 	if ( empty( $username ) && empty( $password ) ) {
 		return $user;
@@ -2436,6 +2436,7 @@ function bp_core_signup_disable_inactive( $user = null, $username = '', $passwor
 	}
 
 	// Unactivated user account found!
+
 	/*
 	 * Don't allow users to resend their own activation email
 	 * when membership requests are enabled.

@@ -61,7 +61,7 @@ class BP_XProfile_User_Admin {
 		add_action( 'bp_members_admin_xprofile_metabox', array( $this, 'register_metaboxes' ), 10, 3 );
 
 		// Saves the profile actions for user ( profile fields ).
-		add_action( 'bp_members_admin_update_user', array( $this, 'user_admin_load'    ), 10, 4 );
+		add_action( 'bp_members_admin_update_user', array( $this, 'user_admin_load' ), 10, 4 );
 	}
 
 	/**
@@ -110,7 +110,6 @@ class BP_XProfile_User_Admin {
 					array( 'profile_group_id' => bp_get_the_profile_group_id() )
 				);
 			endwhile;
-
 
 		} else {
 			// If member is already a spammer, show a generic metabox.
@@ -186,7 +185,6 @@ class BP_XProfile_User_Admin {
 			// Now we've checked for required fields, let's save the values.
 			$old_values = $new_values = array();
 			foreach ( (array) $posted_field_ids as $field_id ) {
-
 				/*
 				 * Certain types of fields (checkboxes, multiselects) may come
 				 * through empty. Save them as an empty array so that they don't
@@ -195,6 +193,7 @@ class BP_XProfile_User_Admin {
 				$value = isset( $_POST[ 'field_' . $field_id ] ) ? $_POST[ 'field_' . $field_id ] : '';
 
 				$visibility_level = ! empty( $_POST[ 'field_' . $field_id . '_visibility' ] ) ? $_POST[ 'field_' . $field_id . '_visibility' ] : 'public';
+
 				/*
 				 * Save the old and new values. They will be
 				 * passed to the filter and used to determine
@@ -398,6 +397,5 @@ class BP_XProfile_User_Admin {
 		</p>
 	<?php
 	}
-
 }
 endif; // End class_exists check.

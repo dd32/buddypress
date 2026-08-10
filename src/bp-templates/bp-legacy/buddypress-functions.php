@@ -12,7 +12,7 @@
 // Exit if accessed directly.
 defined( 'ABSPATH' ) || exit;
 
-/** Theme Setup ***************************************************************/
+/** Theme Setup */
 
 if ( ! class_exists( 'BP_Legacy' ) ) :
 
@@ -76,16 +76,16 @@ class BP_Legacy extends BP_Theme_Compat {
 		// Filter BuddyPress template hierarchy and look for page templates.
 		add_filter( 'bp_get_buddypress_template', array( $this, 'theme_compat_page_templates' ), 10, 1 );
 
-		/** Scripts ***********************************************************/
+		/** Scripts */
 
-		add_action( 'bp_enqueue_community_scripts', array( $this, 'enqueue_styles'   ) ); // Enqueue theme CSS
-		add_action( 'bp_enqueue_community_scripts', array( $this, 'enqueue_scripts'  ) ); // Enqueue theme JS
+		add_action( 'bp_enqueue_community_scripts', array( $this, 'enqueue_styles' ) ); // Enqueue theme CSS
+		add_action( 'bp_enqueue_community_scripts', array( $this, 'enqueue_scripts' ) ); // Enqueue theme JS
 		add_action( 'bp_enqueue_community_scripts', array( $this, 'localize_scripts' ) ); // Enqueue theme script localization
 
 		// Body no-js class.
 		add_filter( 'body_class', array( $this, 'add_nojs_body_class' ), 20, 1 );
 
-		/** Buttons ***********************************************************/
+		/** Buttons */
 
 		if ( ! is_admin() || ( defined( 'DOING_AJAX' ) && DOING_AJAX ) ) {
 			// Register buttons for the relevant component templates
@@ -120,7 +120,7 @@ class BP_Legacy extends BP_Theme_Compat {
 			}
 		}
 
-		/** Notices ***********************************************************/
+		/** Notices */
 
 		// Only hook the 'sitewide_notices' overlay if the Sitewide
 		// Notices widget is not in use (to avoid duplicate content).
@@ -128,7 +128,7 @@ class BP_Legacy extends BP_Theme_Compat {
 			add_action( 'wp_footer', array( $this, 'sitewide_notices' ), 9999 );
 		}
 
-		/** Ajax **************************************************************/
+		/** Ajax */
 
 		$actions = array(
 
@@ -194,7 +194,7 @@ class BP_Legacy extends BP_Theme_Compat {
 
 		add_filter( 'bp_ajax_querystring', 'bp_legacy_theme_ajax_querystring', 10, 2 );
 
-		/** Override **********************************************************/
+		/** Override */
 
 		/**
 		 * Fires after all of the BuddyPress theme compat actions have been added.
@@ -665,7 +665,7 @@ function bp_legacy_theme_group_create_nav() {
  */
 function bp_legacy_groups_admin_screen_hidden_input() {
 	?>
- 	<input type="hidden" name="group-id" id="group-id" value="<?php bp_group_id(); ?>" />
+	<input type="hidden" name="group-id" id="group-id" value="<?php bp_group_id(); ?>" />
 	<?php
 }
 
@@ -1022,7 +1022,6 @@ function bp_legacy_theme_post_update() {
 	$activity_id = 0;
 	$item_id     = 0;
 	$object      = '';
-
 
 	// Try to get the item id from posted variables.
 	if ( ! empty( $_POST['item_id'] ) ) {
@@ -1719,10 +1718,10 @@ function bp_legacy_theme_ajax_joinleave_group() {
 			check_ajax_referer( 'groups_request_membership' );
 
 			if ( ! bp_current_user_can( 'groups_request_membership', array( 'group_id' => $group->id ) ) || ! groups_send_membership_request(
-				[
+				array(
 					'user_id' => bp_loggedin_user_id(),
 					'group_id' => $group->id,
-				]
+				)
 			) ) {
 				esc_html_e( 'Error requesting membership', 'buddypress' );
 			} else {

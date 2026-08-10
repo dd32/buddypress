@@ -513,7 +513,7 @@ function bp_nouveau_activity_entry_buttons( $args = array() ) {
 				'href'            => $delete_args['link_href'],
 				'class'           => $delete_args['link_class'],
 				'data-bp-tooltip' => $delete_args['data_bp_tooltip'],
-				'data-bp-nonce'   => $delete_args['data-attr'] ,
+				'data-bp-nonce'   => $delete_args['data-attr'],
 			),
 			'link_text'  => sprintf( '<span class="bp-screen-reader-text">%s</span>', esc_html( $delete_args['data_bp_tooltip'] ) ),
 		);
@@ -537,7 +537,7 @@ function bp_nouveau_activity_entry_buttons( $args = array() ) {
 					/**
 					 * Sets the activity spam button icon.
 					*
-					 * @todo: use a specific css rule for this *************************************************************/
+					 * @todo: use a specific css rule for this */
 					'<span class="dashicons dashicons-flag" style="color:#a00;vertical-align:baseline;width:18px;height:18px" aria-hidden="true"></span><span class="bp-screen-reader-text">%s</span>',
 					esc_html_x( 'Spam', 'button', 'buddypress' )
 				),
@@ -792,7 +792,7 @@ function bp_nouveau_activity_comment_buttons( $args = array() ) {
 	 *
 	 * @return array
 	 */
-	function bp_nouveau_get_activity_comment_buttons($args) {
+	function bp_nouveau_get_activity_comment_buttons( $args ) {
 		$buttons = array();
 
 		if ( ! isset( $GLOBALS['activities_template'] ) ) {

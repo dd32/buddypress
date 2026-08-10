@@ -3949,7 +3949,6 @@ function bp_activity_new_comment_notification( $comment_id = 0, $commenter_id = 
 		do_action( 'bp_activity_sent_reply_to_update_notification', $original_activity, $comment_id, $commenter_id, $params );
 	}
 
-
 	/*
 	 * If this is a reply to another comment, send an email notification to the
 	 * author of the immediate parent comment.
@@ -4086,7 +4085,12 @@ add_action( 'bp_before_activity_comment', 'bp_activity_comment_embed' );
 function bp_dtheme_embed_read_more( $activity ) {
 	buddypress()->activity->read_more_id = $activity->id;
 
-	add_filter( 'embed_post_id', function () { return buddypress()->activity->read_more_id; } );
+	add_filter(
+		'embed_post_id',
+		function () {
+			return buddypress()->activity->read_more_id;
+		}
+	);
 	add_filter( 'bp_embed_get_cache', 'bp_embed_activity_cache', 10, 3 );
 	add_action( 'bp_embed_update_cache', 'bp_embed_activity_save_cache', 10, 3 );
 }
