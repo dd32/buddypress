@@ -536,7 +536,7 @@ class BP_Legacy extends BP_Theme_Compat {
 	 * @param BP_Activity_Activity $activity Activity object.
 	 * @return string
 	 */
-	function secondary_avatars( $action, $activity ) {
+	public function secondary_avatars( $action, $activity ) {
 		switch ( $activity->component ) {
 			case 'groups':
 			case 'friends':
@@ -1157,7 +1157,7 @@ function bp_legacy_theme_new_activity_comment() {
 		$depth     = 1;
 		$parent_id = (int) $activities_template->activities[0]->secondary_item_id;
 		while ( $parent_id !== (int) $activities_template->activities[0]->item_id ) {
-			$depth++;
+			++$depth;
 			$p_obj     = new BP_Activity_Activity( $parent_id );
 			$parent_id = (int) $p_obj->secondary_item_id;
 		}

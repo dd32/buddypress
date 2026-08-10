@@ -357,7 +357,7 @@ class BP_Activity_Template {
 	 *
 	 * @return bool True if there are items in the loop, otherwise false.
 	 */
-	function has_activities() {
+	public function has_activities() {
 		if ( $this->activity_count ) {
 			return true;
 		}
@@ -373,7 +373,7 @@ class BP_Activity_Template {
 	 * @return object The next activity item to iterate over.
 	 */
 	public function next_activity() {
-		$this->current_activity++;
+		++$this->current_activity;
 		$this->activity = $this->activities[ $this->current_activity ];
 
 		return $this->activity;
