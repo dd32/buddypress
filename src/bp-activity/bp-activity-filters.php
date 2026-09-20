@@ -105,7 +105,7 @@ add_filter( 'bp_get_activity_content', 'bp_activity_truncate_entry', 5 );
 
 add_filter( 'bp_activity_get_user_favorites', 'bp_activity_sanitize_user_favorites_meta' );
 add_filter( 'bp_get_total_favorite_count_for_user', 'bp_core_number_format' );
-add_filter( 'bp_get_total_mention_count_for_user', 'bp_core_number_format' );
+
 
 add_filter( 'bp_activity_get_embed_excerpt', 'bp_activity_embed_excerpt_onclick_location_filter', 9 );
 
@@ -228,12 +228,12 @@ function bp_activity_filter_kses( $content ) {
  * Find and link @-mentioned users in the contents of a given item.
  *
  * @since 1.2.0
+ * @since 15.0.0 The `$activity_id` parameter was removed since it was unused.
  *
- * @param string $content     The contents of a given item.
- * @param int    $activity_id The activity id. Deprecated.
- * @return string $content Content filtered for mentions.
+ * @param string $content The contents of a given item.
+ * @return string
  */
-function bp_activity_at_name_filter( $content, $activity_id = 0 ) {
+function bp_activity_at_name_filter( $content ) {
 
 	// Are mentions disabled?
 	if ( ! bp_activity_do_mentions() ) {
@@ -276,7 +276,6 @@ function bp_activity_at_name_filter( $content, $activity_id = 0 ) {
 		}
 	}
 
-	// Return the content.
 	return $content;
 }
 
