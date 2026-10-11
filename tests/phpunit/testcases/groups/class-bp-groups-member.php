@@ -31,6 +31,585 @@ class BP_Tests_BP_Groups_Member_TestCases extends BP_UnitTestCase {
 		array_map( 'groups_delete_group', self::$group_ids );
 	}
 
+
+	public function test_get_recently_joined_clauses_restrict_duplicate_joins_and_total() {
+		$user = self::factory()->user->create();
+		$groups = self::factory()->group->create_many( 2, array(
+			'creator_id' => self::$user_ids[3],
+			'name'       => 'Phase Four',
+		) );
+
+		foreach ( $groups as $group ) {
+			self::add_user_to_group( $user, $group );
+		}
+
+		$baseline = BP_Groups_Member::get_recently_joined( $user, 1, 1, 'Phase Four' );
+
+		$this->assertSame( 2, $baseline['total'] );
+
+		$allowed = $groups[0];
+
+		$calls   = array();
+		$filter  = static function( $clauses, $args ) use ( $allowed, &$calls, &$filter ) {
+			remove_filter( 'bp_groups_member_recently_joined_get_sql_clauses', $filter, 0 );
+			$calls[] = $args;
+			$clauses['select'] = str_replace( 'SELECT ', 'SELECT DISTINCT ', $clauses['select'] );
+			$clauses['join'] .= " INNER JOIN (SELECT {$allowed} AS id UNION ALL SELECT {$allowed}) access ON access.id = m.group_id";
+			$clauses['where_conditions']['access'] = "access.id = {$allowed}";
+
+			return $clauses;
+		};
+
+		add_filter( 'bp_groups_member_recently_joined_get_sql_clauses', $filter, 0, 2 );
+
+		try {
+			$found = BP_Groups_Member::get_recently_joined( $user, 1, 1, 'Phase Four' );
+
+			$this->assertSame( array( $allowed ), wp_list_pluck( $found['groups'], 'id' ) );
+			$this->assertSame( 1, $found['total'] );
+
+			add_filter( 'bp_groups_member_recently_joined_get_sql_clauses', $filter, 0, 2 );
+			$second_page = BP_Groups_Member::get_recently_joined( $user, 1, 2, 'Phase Four' );
+
+			$this->assertSame( array(), $second_page['groups'] );
+			$this->assertSame( 1, $second_page['total'] );
+			$this->assertSame( array(
+				'user_id' => $user,
+				'limit'   => 1,
+				'page'    => 1,
+				'filter'  => 'Phase Four',
+			), $calls[0] );
+
+			$this->assertCount( 2, $calls );
+		} finally {
+			remove_filter( 'bp_groups_member_recently_joined_get_sql_clauses', $filter, 0 );
+		}
+	}
+
+	public function test_get_recently_joined_final_sql_receives_both_contexts() {
+		$user = self::factory()->user->create();
+		$groups = self::factory()->group->create_many( 2, array(
+			'creator_id' => self::$user_ids[3],
+			'name'       => 'Phase Four',
+		) );
+
+		foreach ( $groups as $group ) {
+			self::add_user_to_group( $user, $group );
+		}
+
+		$contexts = array();
+		$filter   = static function( $sql, $type, $args, $clauses ) use ( &$contexts ) {
+			$contexts[ $type ] = array( $args, $clauses );
+
+			return 'count' === $type ? 'SELECT 42' : str_replace( 'WHERE', 'WHERE 1 = 0 AND', $sql );
+		};
+
+		add_filter( 'bp_groups_member_recently_joined_get_sql', $filter, 10, 4 );
+
+		try {
+			$found = BP_Groups_Member::get_recently_joined( $user, 1, 1, 'Phase Four' );
+		} finally {
+			remove_filter( 'bp_groups_member_recently_joined_get_sql', $filter );
+		}
+
+		$this->assertSame( array(), $found['groups'] );
+		$this->assertSame( 42, $found['total'] );
+		$this->assertSame( array( 'paged', 'count' ), array_keys( $contexts ) );
+		$this->assertSame( $contexts['paged'], $contexts['count'] );
+		$this->assertSame( $user, $contexts['paged'][0]['user_id'] );
+		$this->assertArrayHasKey( 'where_conditions', $contexts['paged'][1] );
+	}
+
+	public function test_get_is_admin_of_clauses_restrict_duplicate_joins_and_total() {
+		$user = self::factory()->user->create();
+		$groups = self::factory()->group->create_many( 2, array(
+			'creator_id' => self::$user_ids[3],
+			'name'       => 'Phase Four',
+		) );
+
+		foreach ( $groups as $group ) {
+			self::add_user_to_group( $user, $group );
+			$membership = new BP_Groups_Member( $user, $group );
+			$membership->promote( 'admin' );
+		}
+
+		$baseline = BP_Groups_Member::get_is_admin_of( $user, 1, 1, 'Phase Four' );
+
+		$this->assertSame( 2, $baseline['total'] );
+
+		$allowed = $groups[0];
+
+		$calls   = array();
+		$filter  = static function( $clauses, $args ) use ( $allowed, &$calls, &$filter ) {
+			remove_filter( 'bp_groups_member_is_admin_of_get_sql_clauses', $filter, 0 );
+			$calls[] = $args;
+			$clauses['select'] = str_replace( 'SELECT ', 'SELECT DISTINCT ', $clauses['select'] );
+			$clauses['join'] .= " INNER JOIN (SELECT {$allowed} AS id UNION ALL SELECT {$allowed}) access ON access.id = m.group_id";
+			$clauses['where_conditions']['access'] = "access.id = {$allowed}";
+
+			return $clauses;
+		};
+
+		add_filter( 'bp_groups_member_is_admin_of_get_sql_clauses', $filter, 0, 2 );
+
+		try {
+			$found = BP_Groups_Member::get_is_admin_of( $user, 1, 1, 'Phase Four' );
+
+			$this->assertSame( array( $allowed ), wp_list_pluck( $found['groups'], 'id' ) );
+			$this->assertSame( 1, $found['total'] );
+
+			add_filter( 'bp_groups_member_is_admin_of_get_sql_clauses', $filter, 0, 2 );
+			$second_page = BP_Groups_Member::get_is_admin_of( $user, 1, 2, 'Phase Four' );
+
+			$this->assertSame( array(), $second_page['groups'] );
+			$this->assertSame( 1, $second_page['total'] );
+			$this->assertSame( array(
+				'user_id' => $user,
+				'limit'   => 1,
+				'page'    => 1,
+				'filter'  => 'Phase Four',
+			), $calls[0] );
+
+			$this->assertCount( 2, $calls );
+		} finally {
+			remove_filter( 'bp_groups_member_is_admin_of_get_sql_clauses', $filter, 0 );
+		}
+	}
+
+	public function test_get_is_admin_of_final_sql_receives_both_contexts() {
+		$user = self::factory()->user->create();
+		$groups = self::factory()->group->create_many( 2, array(
+			'creator_id' => self::$user_ids[3],
+			'name'       => 'Phase Four',
+		) );
+
+		foreach ( $groups as $group ) {
+			self::add_user_to_group( $user, $group );
+			$membership = new BP_Groups_Member( $user, $group );
+			$membership->promote( 'admin' );
+		}
+
+		$contexts = array();
+		$filter   = static function( $sql, $type, $args, $clauses ) use ( &$contexts ) {
+			$contexts[ $type ] = array( $args, $clauses );
+
+			return 'count' === $type ? 'SELECT 42' : str_replace( 'WHERE', 'WHERE 1 = 0 AND', $sql );
+		};
+
+		add_filter( 'bp_groups_member_is_admin_of_get_sql', $filter, 10, 4 );
+
+		try {
+			$found = BP_Groups_Member::get_is_admin_of( $user, 1, 1, 'Phase Four' );
+		} finally {
+			remove_filter( 'bp_groups_member_is_admin_of_get_sql', $filter );
+		}
+
+		$this->assertSame( array(), $found['groups'] );
+		$this->assertSame( 42, $found['total'] );
+		$this->assertSame( array( 'paged', 'count' ), array_keys( $contexts ) );
+		$this->assertSame( $contexts['paged'], $contexts['count'] );
+		$this->assertSame( $user, $contexts['paged'][0]['user_id'] );
+		$this->assertArrayHasKey( 'where_conditions', $contexts['paged'][1] );
+	}
+
+	public function test_get_is_mod_of_clauses_restrict_duplicate_joins_and_total() {
+		$user = self::factory()->user->create();
+		$groups = self::factory()->group->create_many( 2, array(
+			'creator_id' => self::$user_ids[3],
+			'name'       => 'Phase Four',
+		) );
+
+		foreach ( $groups as $group ) {
+			self::add_user_to_group( $user, $group );
+			$membership = new BP_Groups_Member( $user, $group );
+			$membership->promote( 'mod' );
+		}
+
+		$baseline = BP_Groups_Member::get_is_mod_of( $user, 1, 1, 'Phase Four' );
+
+		$this->assertSame( 2, $baseline['total'] );
+
+		$allowed = $groups[0];
+
+		$calls   = array();
+		$filter  = static function( $clauses, $args ) use ( $allowed, &$calls, &$filter ) {
+			remove_filter( 'bp_groups_member_is_mod_of_get_sql_clauses', $filter, 0 );
+			$calls[] = $args;
+			$clauses['select'] = str_replace( 'SELECT ', 'SELECT DISTINCT ', $clauses['select'] );
+			$clauses['join'] .= " INNER JOIN (SELECT {$allowed} AS id UNION ALL SELECT {$allowed}) access ON access.id = m.group_id";
+			$clauses['where_conditions']['access'] = "access.id = {$allowed}";
+
+			return $clauses;
+		};
+
+		add_filter( 'bp_groups_member_is_mod_of_get_sql_clauses', $filter, 0, 2 );
+
+		try {
+			$found = BP_Groups_Member::get_is_mod_of( $user, 1, 1, 'Phase Four' );
+
+			$this->assertSame( array( $allowed ), wp_list_pluck( $found['groups'], 'id' ) );
+			$this->assertSame( 1, $found['total'] );
+
+			add_filter( 'bp_groups_member_is_mod_of_get_sql_clauses', $filter, 0, 2 );
+			$second_page = BP_Groups_Member::get_is_mod_of( $user, 1, 2, 'Phase Four' );
+
+			$this->assertSame( array(), $second_page['groups'] );
+			$this->assertSame( 1, $second_page['total'] );
+			$this->assertSame( array(
+				'user_id' => $user,
+				'limit'   => 1,
+				'page'    => 1,
+				'filter'  => 'Phase Four',
+			), $calls[0] );
+
+			$this->assertCount( 2, $calls );
+		} finally {
+			remove_filter( 'bp_groups_member_is_mod_of_get_sql_clauses', $filter, 0 );
+		}
+	}
+
+	public function test_get_is_mod_of_final_sql_receives_both_contexts() {
+		$user = self::factory()->user->create();
+		$groups = self::factory()->group->create_many( 2, array(
+			'creator_id' => self::$user_ids[3],
+			'name'       => 'Phase Four',
+		) );
+
+		foreach ( $groups as $group ) {
+			self::add_user_to_group( $user, $group );
+			$membership = new BP_Groups_Member( $user, $group );
+			$membership->promote( 'mod' );
+		}
+
+		$contexts = array();
+		$filter   = static function( $sql, $type, $args, $clauses ) use ( &$contexts ) {
+			$contexts[ $type ] = array( $args, $clauses );
+
+			return 'count' === $type ? 'SELECT 42' : str_replace( 'WHERE', 'WHERE 1 = 0 AND', $sql );
+		};
+
+		add_filter( 'bp_groups_member_is_mod_of_get_sql', $filter, 10, 4 );
+
+		try {
+			$found = BP_Groups_Member::get_is_mod_of( $user, 1, 1, 'Phase Four' );
+		} finally {
+			remove_filter( 'bp_groups_member_is_mod_of_get_sql', $filter );
+		}
+
+		$this->assertSame( array(), $found['groups'] );
+		$this->assertSame( 42, $found['total'] );
+		$this->assertSame( array( 'paged', 'count' ), array_keys( $contexts ) );
+		$this->assertSame( $contexts['paged'], $contexts['count'] );
+		$this->assertSame( $user, $contexts['paged'][0]['user_id'] );
+		$this->assertArrayHasKey( 'where_conditions', $contexts['paged'][1] );
+	}
+
+	public function test_get_is_banned_of_clauses_restrict_duplicate_joins_and_total() {
+		$user = self::factory()->user->create();
+		$groups = self::factory()->group->create_many( 2, array(
+			'creator_id' => self::$user_ids[3],
+			'name'       => 'Phase Four',
+		) );
+
+		foreach ( $groups as $group ) {
+			self::add_user_to_group( $user, $group );
+			$membership = new BP_Groups_Member( $user, $group );
+			$membership->ban();
+		}
+
+		$baseline = BP_Groups_Member::get_is_banned_of( $user, 1, 1, 'Phase Four' );
+
+		$this->assertSame( 2, $baseline['total'] );
+
+		$allowed = $groups[0];
+
+		$calls   = array();
+		$filter  = static function( $clauses, $args ) use ( $allowed, &$calls, &$filter ) {
+			remove_filter( 'bp_groups_member_is_banned_of_get_sql_clauses', $filter, 0 );
+			$calls[] = $args;
+			$clauses['select'] = str_replace( 'SELECT ', 'SELECT DISTINCT ', $clauses['select'] );
+			$clauses['join'] .= " INNER JOIN (SELECT {$allowed} AS id UNION ALL SELECT {$allowed}) access ON access.id = m.group_id";
+			$clauses['where_conditions']['access'] = "access.id = {$allowed}";
+
+			return $clauses;
+		};
+
+		add_filter( 'bp_groups_member_is_banned_of_get_sql_clauses', $filter, 0, 2 );
+
+		try {
+			$found = BP_Groups_Member::get_is_banned_of( $user, 1, 1, 'Phase Four' );
+
+			$this->assertSame( array( $allowed ), wp_list_pluck( $found['groups'], 'id' ) );
+			$this->assertSame( 1, $found['total'] );
+
+			add_filter( 'bp_groups_member_is_banned_of_get_sql_clauses', $filter, 0, 2 );
+			$second_page = BP_Groups_Member::get_is_banned_of( $user, 1, 2, 'Phase Four' );
+
+			$this->assertSame( array(), $second_page['groups'] );
+			$this->assertSame( 1, $second_page['total'] );
+			$this->assertSame( array(
+				'user_id' => $user,
+				'limit'   => 1,
+				'page'    => 1,
+				'filter'  => 'Phase Four',
+			), $calls[0] );
+
+			$this->assertCount( 2, $calls );
+		} finally {
+			remove_filter( 'bp_groups_member_is_banned_of_get_sql_clauses', $filter, 0 );
+		}
+	}
+
+	public function test_get_is_banned_of_final_sql_receives_both_contexts() {
+		$user = self::factory()->user->create();
+		$groups = self::factory()->group->create_many( 2, array(
+			'creator_id' => self::$user_ids[3],
+			'name'       => 'Phase Four',
+		) );
+
+		foreach ( $groups as $group ) {
+			self::add_user_to_group( $user, $group );
+			$membership = new BP_Groups_Member( $user, $group );
+			$membership->ban();
+		}
+
+		$contexts = array();
+		$filter   = static function( $sql, $type, $args, $clauses ) use ( &$contexts ) {
+			$contexts[ $type ] = array( $args, $clauses );
+
+			return 'count' === $type ? 'SELECT 42' : str_replace( 'WHERE', 'WHERE 1 = 0 AND', $sql );
+		};
+
+		add_filter( 'bp_groups_member_is_banned_of_get_sql', $filter, 10, 4 );
+
+		try {
+			$found = BP_Groups_Member::get_is_banned_of( $user, 1, 1, 'Phase Four' );
+		} finally {
+			remove_filter( 'bp_groups_member_is_banned_of_get_sql', $filter );
+		}
+
+		$this->assertSame( array(), $found['groups'] );
+		$this->assertSame( 42, $found['total'] );
+		$this->assertSame( array( 'paged', 'count' ), array_keys( $contexts ) );
+		$this->assertSame( $contexts['paged'], $contexts['count'] );
+		$this->assertSame( $user, $contexts['paged'][0]['user_id'] );
+		$this->assertArrayHasKey( 'where_conditions', $contexts['paged'][1] );
+	}
+
+	public function test_get_recently_joined_default_sql_visibility_and_pagination() {
+		global $wpdb;
+
+		$bp   = buddypress();
+		$user = self::factory()->user->create();
+		$groups = self::factory()->group->create_many( 2, array(
+			'creator_id' => self::$user_ids[3],
+			'name'       => 'Phase Four',
+		) );
+		$groups[] = self::factory()->group->create( array(
+			'creator_id' => self::$user_ids[3],
+			'name'       => 'Phase Four Hidden',
+			'status'     => 'hidden',
+		) );
+
+		foreach ( $groups as $group ) {
+			self::add_user_to_group( $user, $group );
+		}
+
+		$previous_user = get_current_user_id();
+
+		$queries       = array();
+		$capture       = static function( $sql, $type ) use ( &$queries ) {
+			$queries[ $type ] = $sql;
+
+			return $sql;
+		};
+
+		add_filter( 'bp_groups_member_recently_joined_get_sql', $capture, 10, 2 );
+
+		try {
+			foreach ( array( 0, $user ) as $viewer ) {
+				wp_set_current_user( $viewer );
+				$hidden = $viewer === $user ? '' : " AND g.status != 'hidden'";
+				$search = $wpdb->prepare( ' AND ( g.name LIKE %s OR g.description LIKE %s )', '%Phase Four%', '%Phase Four%' );
+				$expected = array(
+					'paged' => "SELECT g.*, gm1.meta_value as total_member_count, gm2.meta_value as last_activity FROM {$bp->groups->table_name_groupmeta} gm1, {$bp->groups->table_name_groupmeta} gm2, {$bp->groups->table_name_members} m, {$bp->groups->table_name} g WHERE g.id = m.group_id AND g.id = gm1.group_id AND g.id = gm2.group_id AND gm2.meta_key = 'last_activity' AND gm1.meta_key = 'total_member_count'{$hidden}{$search} AND m.user_id = {$user} AND m.is_confirmed = 1 AND m.is_banned = 0 ORDER BY m.date_modified DESC  LIMIT 1, 1",
+					'count' => "SELECT COUNT(DISTINCT m.group_id) FROM {$bp->groups->table_name_members} m, {$bp->groups->table_name} g WHERE m.group_id = g.id{$hidden}{$search} AND m.user_id = {$user} AND m.is_banned = 0 AND m.is_confirmed = 1 ORDER BY m.date_modified DESC",
+				);
+				$found = BP_Groups_Member::get_recently_joined( $user, 1, 2, 'Phase Four' );
+
+				$this->assertSame( $expected, $queries );
+				$this->assertCount( 1, $found['groups'] );
+				$this->assertSame( $viewer === $user ? 3 : 2, $found['total'] );
+				$this->assertIsInt( $found['groups'][0]->id );
+			}
+		} finally {
+			remove_filter( 'bp_groups_member_recently_joined_get_sql', $capture );
+			wp_set_current_user( $previous_user );
+		}
+	}
+
+	public function test_get_is_admin_of_default_sql_visibility_and_pagination() {
+		global $wpdb;
+
+		$bp   = buddypress();
+		$user = self::factory()->user->create();
+		$groups = self::factory()->group->create_many( 2, array(
+			'creator_id' => self::$user_ids[3],
+			'name'       => 'Phase Four',
+		) );
+		$groups[] = self::factory()->group->create( array(
+			'creator_id' => self::$user_ids[3],
+			'name'       => 'Phase Four Hidden',
+			'status'     => 'hidden',
+		) );
+
+		foreach ( $groups as $group ) {
+			self::add_user_to_group( $user, $group );
+			$membership = new BP_Groups_Member( $user, $group );
+			$membership->promote( 'admin' );
+		}
+
+		$previous_user = get_current_user_id();
+
+		$queries       = array();
+		$capture       = static function( $sql, $type ) use ( &$queries ) {
+			$queries[ $type ] = $sql;
+
+			return $sql;
+		};
+
+		add_filter( 'bp_groups_member_is_admin_of_get_sql', $capture, 10, 2 );
+
+		try {
+			foreach ( array( 0, $user ) as $viewer ) {
+				wp_set_current_user( $viewer );
+				$hidden = $viewer === $user ? '' : " AND g.status != 'hidden'";
+				$search = $wpdb->prepare( ' AND ( g.name LIKE %s OR g.description LIKE %s )', '%Phase Four%', '%Phase Four%' );
+				$expected = array(
+					'paged' => "SELECT g.*, gm1.meta_value as total_member_count, gm2.meta_value as last_activity FROM {$bp->groups->table_name_groupmeta} gm1, {$bp->groups->table_name_groupmeta} gm2, {$bp->groups->table_name_members} m, {$bp->groups->table_name} g WHERE g.id = m.group_id AND g.id = gm1.group_id AND g.id = gm2.group_id AND gm2.meta_key = 'last_activity' AND gm1.meta_key = 'total_member_count'{$hidden}{$search} AND m.user_id = {$user} AND m.is_confirmed = 1 AND m.is_banned = 0 AND m.is_admin = 1 ORDER BY m.date_modified ASC  LIMIT 1, 1",
+					'count' => "SELECT COUNT(DISTINCT m.group_id) FROM {$bp->groups->table_name_members} m, {$bp->groups->table_name} g WHERE m.group_id = g.id{$hidden}{$search} AND m.user_id = {$user} AND m.is_confirmed = 1 AND m.is_banned = 0 AND m.is_admin = 1 ORDER BY date_modified ASC",
+				);
+				$found = BP_Groups_Member::get_is_admin_of( $user, 1, 2, 'Phase Four' );
+
+				$this->assertSame( $expected, $queries );
+				$this->assertCount( 1, $found['groups'] );
+				$this->assertSame( $viewer === $user ? 3 : 2, $found['total'] );
+				$this->assertIsInt( $found['groups'][0]->id );
+			}
+		} finally {
+			remove_filter( 'bp_groups_member_is_admin_of_get_sql', $capture );
+			wp_set_current_user( $previous_user );
+		}
+	}
+
+	public function test_get_is_mod_of_default_sql_visibility_and_pagination() {
+		global $wpdb;
+
+		$bp   = buddypress();
+		$user = self::factory()->user->create();
+		$groups = self::factory()->group->create_many( 2, array(
+			'creator_id' => self::$user_ids[3],
+			'name'       => 'Phase Four',
+		) );
+		$groups[] = self::factory()->group->create( array(
+			'creator_id' => self::$user_ids[3],
+			'name'       => 'Phase Four Hidden',
+			'status'     => 'hidden',
+		) );
+
+		foreach ( $groups as $group ) {
+			self::add_user_to_group( $user, $group );
+			$membership = new BP_Groups_Member( $user, $group );
+			$membership->promote( 'mod' );
+		}
+
+		$previous_user = get_current_user_id();
+
+		$queries       = array();
+		$capture       = static function( $sql, $type ) use ( &$queries ) {
+			$queries[ $type ] = $sql;
+
+			return $sql;
+		};
+
+		add_filter( 'bp_groups_member_is_mod_of_get_sql', $capture, 10, 2 );
+
+		try {
+			foreach ( array( 0, $user ) as $viewer ) {
+				wp_set_current_user( $viewer );
+				$hidden = $viewer === $user ? '' : " AND g.status != 'hidden'";
+				$search = $wpdb->prepare( ' AND ( g.name LIKE %s OR g.description LIKE %s )', '%Phase Four%', '%Phase Four%' );
+				$expected = array(
+					'paged' => "SELECT g.*, gm1.meta_value as total_member_count, gm2.meta_value as last_activity FROM {$bp->groups->table_name_groupmeta} gm1, {$bp->groups->table_name_groupmeta} gm2, {$bp->groups->table_name_members} m, {$bp->groups->table_name} g WHERE g.id = m.group_id AND g.id = gm1.group_id AND g.id = gm2.group_id AND gm2.meta_key = 'last_activity' AND gm1.meta_key = 'total_member_count'{$hidden}{$search} AND m.user_id = {$user} AND m.is_confirmed = 1 AND m.is_banned = 0 AND m.is_mod = 1 ORDER BY m.date_modified ASC  LIMIT 1, 1",
+					'count' => "SELECT COUNT(DISTINCT m.group_id) FROM {$bp->groups->table_name_members} m, {$bp->groups->table_name} g WHERE m.group_id = g.id{$hidden}{$search} AND m.user_id = {$user} AND m.is_confirmed = 1 AND m.is_banned = 0 AND m.is_mod = 1 ORDER BY date_modified ASC",
+				);
+				$found = BP_Groups_Member::get_is_mod_of( $user, 1, 2, 'Phase Four' );
+
+				$this->assertSame( $expected, $queries );
+				$this->assertCount( 1, $found['groups'] );
+				$this->assertSame( $viewer === $user ? 3 : 2, $found['total'] );
+				$this->assertIsInt( $found['groups'][0]->id );
+			}
+		} finally {
+			remove_filter( 'bp_groups_member_is_mod_of_get_sql', $capture );
+			wp_set_current_user( $previous_user );
+		}
+	}
+
+	public function test_get_is_banned_of_default_sql_visibility_and_pagination() {
+		global $wpdb;
+
+		$bp   = buddypress();
+		$user = self::factory()->user->create();
+		$groups = self::factory()->group->create_many( 2, array(
+			'creator_id' => self::$user_ids[3],
+			'name'       => 'Phase Four',
+		) );
+		$groups[] = self::factory()->group->create( array(
+			'creator_id' => self::$user_ids[3],
+			'name'       => 'Phase Four Hidden',
+			'status'     => 'hidden',
+		) );
+
+		foreach ( $groups as $group ) {
+			self::add_user_to_group( $user, $group );
+			$membership = new BP_Groups_Member( $user, $group );
+			$membership->ban();
+		}
+
+		$previous_user = get_current_user_id();
+
+		$queries       = array();
+		$capture       = static function( $sql, $type ) use ( &$queries ) {
+			$queries[ $type ] = $sql;
+
+			return $sql;
+		};
+
+		add_filter( 'bp_groups_member_is_banned_of_get_sql', $capture, 10, 2 );
+
+		try {
+			foreach ( array( 0, $user ) as $viewer ) {
+				wp_set_current_user( $viewer );
+				$hidden = $viewer === $user ? '' : " AND g.status != 'hidden'";
+				$search = $wpdb->prepare( ' AND ( g.name LIKE %s OR g.description LIKE %s )', '%Phase Four%', '%Phase Four%' );
+				$expected = array(
+					'paged' => "SELECT g.*, gm1.meta_value as total_member_count, gm2.meta_value as last_activity FROM {$bp->groups->table_name_groupmeta} gm1, {$bp->groups->table_name_groupmeta} gm2, {$bp->groups->table_name_members} m, {$bp->groups->table_name} g WHERE g.id = m.group_id AND g.id = gm1.group_id AND g.id = gm2.group_id AND gm2.meta_key = 'last_activity' AND gm1.meta_key = 'total_member_count'{$hidden}{$search} AND m.user_id = {$user} AND m.is_banned = 1  ORDER BY m.date_modified ASC  LIMIT 1, 1",
+					'count' => "SELECT COUNT(DISTINCT m.group_id) FROM {$bp->groups->table_name_members} m, {$bp->groups->table_name} g WHERE m.group_id = g.id{$hidden}{$search} AND m.user_id = {$user} AND m.is_banned = 1 ORDER BY date_modified ASC",
+				);
+				$found = BP_Groups_Member::get_is_banned_of( $user, 1, 2, 'Phase Four' );
+
+				$this->assertSame( $expected, $queries );
+				$this->assertCount( 1, $found['groups'] );
+				$this->assertSame( $viewer === $user ? 3 : 2, $found['total'] );
+				$this->assertIsInt( $found['groups'][0]->id );
+			}
+		} finally {
+			remove_filter( 'bp_groups_member_is_banned_of_get_sql', $capture );
+			wp_set_current_user( $previous_user );
+		}
+	}
+
 	public function test_get_group_ids_should_return_integers() {
 		$group_id = self::factory()->group->create();
 		$user_id  = self::factory()->user->create();

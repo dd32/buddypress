@@ -4537,6 +4537,15 @@ function bp_email_get_type_schema( $field = 'description' ) {
 		'groups-membership-request-rejected-by-admin' => $groups_membership_request_rejected_by_admin,
 	);
 
+	/**
+	 * Filters the list of `bp_email_get_type_schema()` allowing anyone to add/remove email types.
+	 *
+	 * @since 15.0.0
+	 *
+	 * @param array $types The array of email type schema.
+	 */
+	$types = (array) apply_filters( 'bp_email_get_type_schema', $types );
+
 	if ( $field !== 'all' ) {
 		return wp_list_pluck( $types, $field );
 	} else {

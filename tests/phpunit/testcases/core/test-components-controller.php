@@ -387,7 +387,62 @@ class BP_Tests_Components_REST_Controller extends BP_Test_REST_Controller_Testca
 	}
 
 	public function test_prepare_item() {
-		$this->markTestSkipped( 'Coverage for prepare_item_for_response() has not been implemented.' );
+		global $wp_rest_additional_fields;
+
+		$original_fields = $wp_rest_additional_fields;
+
+		$component = array(
+			'name'        => 'activity',
+			'status'      => 'active',
+			'is_active'   => true,
+			'title'       => 'Activity',
+			'description' => 'Activity description',
+			'features'    => null,
+		);
+
+		register_rest_field(
+			'bp_components',
+			'test_edit_field',
+			array(
+				'get_callback' => static function () {
+					return 'Additional value';
+				},
+				'schema'       => array(
+					'type'    => 'string',
+					'context' => array( 'edit' ),
+				),
+			)
+		);
+
+		try {
+			foreach ( array( null, 'view', 'edit' ) as $context ) {
+				$request = new WP_REST_Request( 'GET', $this->endpoint_url );
+				if ( null !== $context ) {
+					$request->set_param( 'context', $context );
+				}
+
+				$response = $this->endpoint->prepare_item_for_response( $component, $request );
+
+				$this->assertInstanceOf( 'WP_REST_Response', $response );
+				$this->assertSame( 200, $response->get_status() );
+
+				$data     = $response->get_data();
+				$expected = $component;
+				if ( 'edit' === $context ) {
+					$expected['test_edit_field'] = 'Additional value';
+				}
+
+				$this->assertSame( $expected, $data );
+
+				if ( 'edit' === $context ) {
+					$this->assertSame( 'Additional value', $data['test_edit_field'] );
+				} else {
+					$this->assertArrayNotHasKey( 'test_edit_field', $data );
+				}
+			}
+		} finally {
+			$wp_rest_additional_fields = $original_fields;
+		}
 	}
 
 	protected function check_component_data( $component, $data ) {
