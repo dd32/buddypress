@@ -11,6 +11,12 @@ class BP_Tests_Blogs_REST_Controller extends BP_Test_REST_Controller_Testcase {
 	public function test_register_routes() {
 		$routes = $this->server->get_routes();
 
+		if ( ! is_multisite() ) {
+			$this->assertArrayNotHasKey( $this->endpoint_url, $routes );
+			$this->assertArrayNotHasKey( $this->endpoint_url . '/(?P<id>[\d]+)', $routes );
+			return;
+		}
+
 		// Main.
 		$this->assertArrayHasKey( $this->endpoint_url, $routes );
 		$this->assertCount( 2, $routes[ $this->endpoint_url ] );
@@ -301,16 +307,26 @@ class BP_Tests_Blogs_REST_Controller extends BP_Test_REST_Controller_Testcase {
 	 * @group update_item
 	 */
 	public function test_update_item() {
+		// This endpoint does not support updating blogs.
 		$this->skipWithoutMultisite();
-		$this->markTestSkipped( 'This endpoint does not support updating blogs.' );
+
+		foreach ( array( 'PUT', 'PATCH' ) as $method ) {
+			$request  = new WP_REST_Request( $method, $this->endpoint_url . '/1' );
+			$response = $this->server->dispatch( $request );
+			$this->assertErrorResponse( 'rest_no_route', $response, 404 );
+		}
 	}
 
 	/**
 	 * @group delete_item
 	 */
 	public function test_delete_item() {
+		// This endpoint does not support deleting blogs.
 		$this->skipWithoutMultisite();
-		$this->markTestSkipped( 'This endpoint does not support deleting blogs.' );
+
+		$request  = new WP_REST_Request( 'DELETE', $this->endpoint_url . '/1' );
+		$response = $this->server->dispatch( $request );
+		$this->assertErrorResponse( 'rest_no_route', $response, 404 );
 	}
 
 	/**
