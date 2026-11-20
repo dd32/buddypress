@@ -1079,56 +1079,6 @@ function bp_registration_needs_activation() {
 }
 
 /**
- * Retrieve a client friendly version of the root blog name.
- *
- * The blogname option is escaped with esc_html on the way into the database in
- * sanitize_option, we want to reverse this for the plain text arena of emails.
- *
- * @since 1.7.0
- * @since 2.5.0 No longer used by BuddyPress, but not deprecated in case any existing plugins use it.
- *
- * @link https://buddypress.trac.wordpress.org/ticket/4401
- *
- * @param array $args {
- *     Array of optional parameters.
- *     @type string $before  String to appear before the site name in the
- *                           email subject. Default: '['.
- *     @type string $after   String to appear after the site name in the
- *                           email subject. Default: ']'.
- *     @type string $default The default site name, to be used when none is
- *                           found in the database. Default: 'Community'.
- *     @type string $text    Text to append to the site name (ie, the main text of
- *                           the email subject).
- * }
- * @return string Sanitized email subject.
- */
-function bp_get_email_subject( $args = array() ) {
-
-	$r = bp_parse_args(
-		$args,
-		array(
-			'before'  => '[',
-			'after'   => ']',
-			'default' => __( 'Community', 'buddypress' ),
-			'text'    => '',
-		),
-		'get_email_subject'
-	);
-
-	$subject = $r['before'] . wp_specialchars_decode( bp_get_option( 'blogname', $r['default'] ), ENT_QUOTES ) . $r['after'] . ' ' . $r['text'];
-
-	/**
-	 * Filters a client friendly version of the root blog name.
-	 *
-	 * @since 1.7.0
-	 *
-	 * @param string $subject Client friendly version of the root blog name.
-	 * @param array  $r       Array of arguments for the email subject.
-	 */
-	return apply_filters( 'bp_get_email_subject', $subject, $r );
-}
-
-/**
  * Allow templates to pass parameters directly into the template loops via AJAX.
  *
  * For the most part this will be filtered in a theme's functions.php for
@@ -2042,8 +1992,19 @@ function bp_is_active( $component = '', $feature = '' ) {
 						$retval = false;
 					}
 
-					/** This filter is documented in wp-includes/deprecated.php */
-					return apply_filters_deprecated( 'bp_is_profile_cover_image_active', array( $retval ), '6.0.0', 'bp_is_members_cover_image_active' );
+					/**
+					 * Filters whether member cover images are active.
+					 *
+					 * @deprecated 6.0.0 Use the `bp_is_members_cover_image_active` filter instead.
+					 *
+					 * @param bool $is_cover_image_active Whether member cover images are active.
+					 */
+					return apply_filters_deprecated(
+						'bp_is_profile_cover_image_active',
+						array( $retval ),
+						'6.0.0',
+						'bp_is_members_cover_image_active'
+					);
 				}
 			}
 
@@ -3491,31 +3452,6 @@ function bp_get_the_post_class( $wp_classes = array() ) {
 	return array_unique( array_merge( $bp_classes, $wp_classes ) );
 }
 add_filter( 'post_class', 'bp_get_the_post_class' );
-
-/**
- * Sort BuddyPress nav menu items by their position property.
- *
- * This is an internal convenience function and it will probably be removed in
- * a later release. Do not use.
- *
- * @access private
- * @since 1.7.0
- *
- * @param array $a First item.
- * @param array $b Second item.
- * @return int Returns an integer less than, equal to, or greater than zero if
- *             the first argument is considered to be respectively less than,
- *             equal to, or greater than the second.
- */
-function _bp_nav_menu_sort( $a, $b ) {
-	if ( (int) $a['position'] === (int) $b['position'] ) {
-		return 0;
-	} elseif ( $a['position'] < $b['position'] ) {
-		return -1;
-	} else {
-		return 1;
-	}
-}
 
 /**
  * Get the items registered in the primary and secondary BuddyPress navigation menus.
