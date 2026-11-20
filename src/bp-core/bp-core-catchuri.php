@@ -331,7 +331,7 @@ add_action( 'bp_template_redirect', 'bp_core_catch_no_access', 1 );
  *     @type string $redirect The URL the user will be redirected to after successfully
  *                            logging in. Default: the URL originally requested.
  *     @type string $root     The root URL of the site, used in case of error or mode 1 redirects.
- *                            Default: the value of {@link bp_get_root_url()}.
+ *                            Default: the value of {@see bp_get_root_url()}.
  *     @type string $message  An error message to display to the user on the log-in page.
  *                            Default: "You must log in to access the page you requested."
  * }
@@ -464,7 +464,7 @@ add_action( 'login_init', 'bp_login_redirector', 1 );
  * @since 1.5.0
  * @since 2.7.0 Hook moved to 'wp_login_errors' made available since WP 3.6.0.
  *
- * @param  WP_Error $errors Current error container.
+ * @param WP_Error $errors Current error container.
  * @return WP_Error
  */
 function bp_core_no_access_wp_login_error( $errors ) {
@@ -493,7 +493,7 @@ add_filter( 'wp_login_errors', 'bp_core_no_access_wp_login_error' );
  *
  * @since 2.7.0
  *
- * @param  array $codes Array of WP error codes.
+ * @param array $codes Array of WP error codes.
  * @return array
  */
 function bp_core_login_filter_shake_codes( $codes ) {
@@ -857,8 +857,8 @@ add_action( 'wp_head', '_bp_maybe_remove_rel_canonical', 8 );
  *
  * @since 2.7.0
  *
- * @param  null     $retval Current return value for filter.
- * @param  WP_Query $query  Current WordPress query object.
+ * @param null     $retval Current return value for filter.
+ * @param WP_Query $query  Current WordPress query object.
  * @return null|array
  */
 function bp_core_filter_wp_query( $retval, $query ) {

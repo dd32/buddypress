@@ -786,7 +786,7 @@ function bp_nouveau_customizer_grid_choices( $type = 'option' ) {
  *
  * @since 3.0.0
  *
- * @param  string $option Optional. A comma separated list of nav items slugs.
+ * @param string $option Optional. A comma separated list of nav items slugs.
  *
  * @return array An array of nav items slugs.
  */
@@ -1584,7 +1584,7 @@ add_filter( 'bp_core_register_blocks', 'bp_nouveau_register_primary_nav_widget_b
  * @since 9.0.0
  *
  * @param array $block_globals Optional. The list of global properties for Core blocks.
- * @return array               The list of global properties for Core blocks.
+ * @return array The list of global properties for Core blocks.
  */
 function bp_nouveau_register_core_block_globals( $block_globals = array() ) {
 	$block_globals['bp/primary-nav'] = array(
@@ -1616,7 +1616,7 @@ add_action( 'load-post-new.php', 'bp_nouveau_unregister_blocks_for_post_context'
  * @since 9.0.0
  *
  * @param array $attributes Optional. The block attributes.
- * @return string           HTML output.
+ * @return string HTML output.
  */
 function bp_nouveau_render_primary_nav_block( $attributes = array() ) {
 	$widget_content = '';
